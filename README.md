@@ -25,18 +25,59 @@ To create a multi-arch image, follow the next 4 steps
 
 ```bash
 # Build the images on their respective platforms
-docker build -t ckulka/multiarch-example:amd64 -f Dockerfile.amd64 .
-docker push ckulka/multiarch-example:amd64
+docker build -t ckulka/multi-arch-example:amd64 -f Dockerfile.amd64 .
+docker push ckulka/multi-arch-example:amd64
 
-docker build -t ckulka/multiarch-example:arm32v7 -f Dockerfile.arm32v7 .
-docker push ckulka/multiarch-example:arm32v7
+docker build -t ckulka/multi-arch-example:arm32v7 -f Dockerfile.arm32v7 .
+docker push ckulka/multi-arch-example:arm32v7
 
 # Create and push the manifest
-docker manifest create ckulka/multiarch-example:latest ckulka/multiarch-example:amd64 ckulka/multiarch-example:arm32v7
-docker manifest push ckulka/multiarch-example:latest
+docker manifest create ckulka/multi-arch-example:latest ckulka/multi-arch-example:amd64 ckulka/multi-arch-example:arm32v7
+docker manifest push ckulka/multi-arch-example:latest
 ```
 
-The created manifest acts as a reference for the linked images. The Docker client, when pulling `ckulka/multiarch-example:latest`, looks up a "fitting" image and then uses that one.
+The created manifest acts as a reference for the linked images. The Docker client, when pulling `ckulka/multi-arch-example:latest`, looks up a "fitting" image and then uses that one.
+
+The `--amend` parameters allows adding additional platforms:
+
+```bash
+docker manifest create --amend ckulka/multi-arch-example:latest ckulka/multi-arch-example:arm32v8
+```
+
+## Inspecting the result
+
+The `docker manifest inspect` command shows the image manifest details - for the multi-arch image, it's the list of images it references and their respective platforms:
+
+```bash
+docker manifest inspect ckulka/multi-arch-example:latest
+```
+
+```json
+{
+   "schemaVersion": 2,
+   "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",
+   "manifests": [
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 1728,
+         "digest": "sha256:3a859e0c2bdfb60f52b2c805e2cb55260998b3c343d9e2ea04a742d946be1b1e",
+         "platform": {
+            "architecture": "amd64",
+            "os": "linux"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 1728,
+         "digest": "sha256:3ef9264d6e5ad96ad7bac675d40edf265ae838ae6ca60865abed159c8c5124c8",
+         "platform": {
+            "architecture": "arm",
+            "os": "linux"
+         }
+      }
+   ]
+}
+```
 
 ## References
 
