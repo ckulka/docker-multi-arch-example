@@ -1,6 +1,6 @@
 
 env:
-  - ARCH=amd64
+#  - ARCH=amd64
   - ARCH=arm32v7
 
 sudo: required

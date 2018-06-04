@@ -1,5 +1,7 @@
 FROM arm32v7/python:3-slim
 
+ADD https://github.com/multiarch/qemu-user-static/releases/download/v2.12.0/qemu-armeb-static /usr/bin/qemu-arm-static
+
 # Install requirements
 WORKDIR /usr/src/app
 COPY requirements.txt ./
