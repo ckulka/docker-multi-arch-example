@@ -44,6 +44,18 @@ The `--amend` parameters allows adding additional platforms:
 docker manifest create --amend ckulka/multi-arch-example:latest ckulka/multi-arch-example:arm32v8
 ```
 
+The `--purge` parameter deletes the local manifest, which allows recreating and subsequently replacing the list:
+
+```bash
+# Release version 1.0 as latest image variant
+docker manifest create ckulka/multi-arch-example:latest ckulka/multi-arch-example:1.0-amd64 ckulka/multi-arch-example:1.0-arm32v7
+docker manifest push --purge ckulka/multi-arch-example:latest
+
+# Release version 2.0 as latest image variant
+docker manifest create ckulka/multi-arch-example:latest ckulka/multi-arch-example:2.0-amd64 ckulka/multi-arch-example:2.0-arm32v7
+docker manifest push --purge ckulka/multi-arch-example:latest
+```
+
 ## Inspecting the result
 
 The `docker manifest inspect` command shows the image manifest details - for the multi-arch image, it's the list of images it references and their respective platforms:
