@@ -7,6 +7,9 @@ language: bash
 services:
   - docker
 
+before_script:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
 script:
   - docker manifest create ckulka/multi-arch-example:latest ckulka/multi-arch-example:amd64 ckulka/multi-arch-example:arm32v7
   - docker manifest push --purge ckulka/multi-arch-example:latest
