@@ -1,0 +1,10 @@
+image: ckulka/multi-arch-example:latest
+manifests:
+  - image: ckulka/multi-arch-example:amd64
+    platform:
+      architecture: amd64
+      os: linux
+  - image: ckulka/multi-arch-example:arm32v7
+    platform:
+      architecture: arm
+      os: linux

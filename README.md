@@ -1,12 +1,67 @@
 # Docker multi-arch example
 
-This repository demonstrates how to create a multi-arch Docker image supporting multiple platforms. It primarily for personal use for reference on how to build manifests and how they work.
+This repository demonstrates how to create a multi-arch Docker image supporting multiple platforms, e.g. both `x86_64` and ARM, but building all images on an `x86_64` platform. It is primarily for personal use for reference on how to build manifests and how they work.
 
-It's a TL;DR version of the references linked at the bottom.
+This example also only relies on Docker Hub to build all images, including the ARM variants, and does not rely on separate build servers or environments to build non-amd64 images.
 
-## Prerequisites
+It's a TL;DR version of the references linked in the README.
 
-Also, as long as the `docker manifest` commands as experimental, enable the experimental mode for the Docker Cli in `~/.docker/config.json:
+## Steps
+
+To create a multi-arch image, follow the next 4 steps
+
+1. Build and push the image for the `amd64` platform
+2. Build and push the image for the `arm32v7` platform
+3. Create the manifest for the multi-arch image
+4. Push the maniest for the multi-arch image
+
+### Automated builds via Docker Hub
+
+The Docker Hub [Custom build phase hooks](https://docs.docker.com/docker-hub/builds/advanced/#custom-build-phase-hooks) allow in combination with [QEMU](https://www.qemu.org) an entirely automated build of the Docker images via Docker Hub for all major platforms - as it is used in this repository.
+
+To see how it's done in this repository, see
+
+- Prepare QEMU in a custom build phase hook, [hooks/pre_build](./hooks/pre_build)
+- Dockerfile to build an ARM image on `x86_64` (Docker Hub), [arm32v7.dockerfile](./arm32v7.dockerfile)
+
+### Push multi-arch manifest automatically (Docker Hub)
+
+Once Docker Hub has published the `amd64` and `arm32v7` images, Docker Hub executes the `hooks/post_push` script.
+
+The script downloads the [manifest-tool](https://github.com/estesp/manifest-tool) and pushes the multi-arch manifest `multi-arch-manifest.yaml`, which - simply put - makes `ckulka/multi-arch-example:latest` a list containing references to the two platform variants.
+
+To see how it's done in this repository, see
+
+- Multi-arch manifest file, [multi-arch-manifest.yaml](./multi-arch-manifest.yaml)
+- Push the multi-arch manifest file in a Custom build phase hook, [hooks/post_push](./hooks/post_push)
+
+### Push the multi-arch manifest manually (manifest-tool)
+
+If you want to push the multi-arch manifest yourself using the manifest-tool, here are the steps that are executed on Docker Hub during the build to push a new multi-arch manifest:
+
+1. Create the mulit-arch manifest file, e.g. [multi-arch-manifest.yaml](./multi-arch-manifest.yaml)
+2. Download the manifest-tool
+3. Push the manifest using manifest-tool
+
+```bash
+# Download the manifest-tool
+curl -Lo manifest-tool https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
+chmod +x manifest-tool
+
+# Push the multi-arch manifest
+./manifest-tool push from-spec multi-arch-manifest.yaml
+
+# On Docker for Mac, see https://github.com/estesp/manifest-tool#sample-usage
+./manifest-tool --username ada --password lovelace push from-spec multi-arch-manifest.yaml
+```
+
+For more details, see [manifest-tool: Create/Push](https://github.com/estesp/manifest-tool#createpush).
+
+### Push the multi-arch manifest manually (Docker CLI)
+
+If you want to push the multi-arch manifest yourself using the Docker CLI, here's how.
+
+As long as the `docker manifest` commands are experimental, enable the experimental mode for the Docker CLI in `~/.docker/config.json` first:
 
 ```json
 {
@@ -14,26 +69,12 @@ Also, as long as the `docker manifest` commands as experimental, enable the expe
 }
 ```
 
-## Steps
-
-To create a multi-arch image, follow the next 4 steps
-
-1. Build and push the image for the `amd64` platform
-1. Build and push the image for the `arm32v7` platform
-1. Create the manifest for the multi-arch image
-1. Push the maniest for the multi-arch image
+Next up, create and publish multi-arch the manifest.
 
 ```bash
-# Build the images on their respective platforms
-docker build -t ckulka/multi-arch-example:amd64 -f Dockerfile.amd64 .
-docker push ckulka/multi-arch-example:amd64
-
-docker build -t ckulka/multi-arch-example:arm32v7 -f Dockerfile.arm32v7 .
-docker push ckulka/multi-arch-example:arm32v7
-
 # Create and push the manifest
 docker manifest create ckulka/multi-arch-example:latest ckulka/multi-arch-example:amd64 ckulka/multi-arch-example:arm32v7
-docker manifest push ckulka/multi-arch-example:latest
+docker manifest push --purge ckulka/multi-arch-example:latest
 ```
 
 The created manifest acts as a reference for the linked images. The Docker client, when pulling `ckulka/multi-arch-example:latest`, looks up a "fitting" image and then uses that one.
@@ -41,7 +82,7 @@ The created manifest acts as a reference for the linked images. The Docker clien
 The `--amend` parameters allows adding additional platforms:
 
 ```bash
-docker manifest create --amend ckulka/multi-arch-example:latest ckulka/multi-arch-example:arm32v8
+docker manifest create --amend ckulka/multi-arch-example:latest ckulka/multi-arch-example:arm64v7
 ```
 
 The `--purge` parameter deletes the local manifest, which allows recreating and subsequently replacing the list:
@@ -93,7 +134,10 @@ docker manifest inspect ckulka/multi-arch-example:latest
 
 ## References
 
-- Image Manifest V 2, Schema 2, <https://docs.docker.com/registry/spec/manifest-v2-2/>
-- Docker Manifest CLI reference, <https://docs.docker.com/edge/engine/reference/commandline/manifest/>
-- <https://github.com/estesp/manifest-tool>
-- <https://medium.com/@mauridb/docker-multi-architecture-images-365a44c26be6>
+- [Image Manifest V 2, Schema 2](https://docs.docker.com/registry/spec/manifest-v2-2/)
+- [Docker Manifest CLI reference](https://docs.docker.com/edge/engine/reference/commandline/manifest/)
+- [estesp/manifest-tool](https://github.com/estesp/manifest-tool)
+- [Docker Multi-Architecture Images by Davide Mauri](https://medium.com/@mauridb/docker-multi-architecture-images-365a44c26be6)
+- [Support automated ARM builds](https://github.com/docker/hub-feedback/issues/1261)
+- [Custom build phase hooks](https://docs.docker.com/docker-hub/builds/advanced/#custom-build-phase-hooks)
+- [QEMU.org](https://www.qemu.org)
