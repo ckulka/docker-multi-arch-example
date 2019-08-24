@@ -1,4 +1,4 @@
-FROM amd64/python:3-slim
+FROM amd64/python:3-alpine
 
 # Install requirements
 WORKDIR /usr/src/app

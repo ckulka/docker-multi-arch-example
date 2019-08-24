@@ -11,7 +11,7 @@ It's a TL;DR version of the references linked in the README.
 To create a multi-arch image, follow the next 4 steps
 
 1. Build and push the image for the `amd64` platform
-2. Build and push the image for the `arm32v7` platform
+2. Build and push the image for the `arm*` platforms
 3. Create the manifest for the multi-arch image
 4. Push the maniest for the multi-arch image
 
@@ -22,22 +22,23 @@ The Docker Hub [Custom build phase hooks](https://docs.docker.com/docker-hub/bui
 To see how it's done in this repository, see
 
 - Prepare QEMU in a custom build phase hook, [hooks/pre_build](./hooks/pre_build)
-- Dockerfile to build an ARM image on `x86_64` (Docker Hub), [arm32v7.dockerfile](./arm32v7.dockerfile)
+- Dockerfile to build an `arm32v7` image on `x86_64` (Docker Hub), [arm32v7.dockerfile](./arm32v7.dockerfile)
+- Dockerfile to build an `arm64v8` image on `x86_64` (Docker Hub), [arm64v8.dockerfile](./arm64v8.dockerfile)
 
 ### Push multi-arch manifest automatically (Docker Hub)
 
-Once Docker Hub has published the `amd64` and `arm32v7` images, Docker Hub executes the `hooks/post_push` script.
+Once Docker Hub has published the `amd64` and `arm*` images, Docker Hub executes the `hooks/post_push` script.
 
-The script downloads the [manifest-tool](https://github.com/estesp/manifest-tool) and pushes the multi-arch manifest `multi-arch-manifest.yaml`, which - simply put - makes `ckulka/multi-arch-example:latest` a list containing references to the two platform variants.
+The script downloads the [manifest-tool](https://github.com/estesp/manifest-tool) and pushes the multi-arch manifest `multi-arch-manifest.yaml`, which - simply put - makes `ckulka/multi-arch-example:latest` a list containing references to the various platform variants.
 
 To see how it's done in this repository, see
 
 - Multi-arch manifest file, [multi-arch-manifest.yaml](./multi-arch-manifest.yaml)
-- Push the multi-arch manifest file in a Custom build phase hook, [hooks/post_push](./hooks/post_push)
+- Push the multi-arch manifest file in a custom build phase hook, [hooks/post_push](./hooks/post_push)
 
 ### Push the multi-arch manifest manually (manifest-tool)
 
-If you want to push the multi-arch manifest yourself using the manifest-tool, here are the steps that are executed on Docker Hub during the build to push a new multi-arch manifest:
+If you want to push the multi-arch manifest yourself using the manifest-tool, here are the steps:
 
 1. Create the mulit-arch manifest file, e.g. [multi-arch-manifest.yaml](./multi-arch-manifest.yaml)
 2. Download the manifest-tool
@@ -131,6 +132,14 @@ docker manifest inspect ckulka/multi-arch-example:latest
    ]
 }
 ```
+
+## Known limitations
+
+Building non-x86_64 images on Docker Hub results in images with incorrectly labelled architectures.
+
+For example, the `arm32v7` image runs on `arm32v7`, but will labelled as `amd64`, because Docker Hub builds the images on `x86_64`. There is a [workaround for it](https://github.com/moby/moby/issues/36552#issuecomment-459927487), but I've not added it here to keep things simple.
+
+This issue is currently tracked in [moby/moby#36552](https://github.com/moby/moby/issues/36552).
 
 ## References
 
