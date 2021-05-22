@@ -25,6 +25,16 @@ To see how it's done in this repository, see
 - Dockerfile to build an `arm32v7` image on `x86_64` (Docker Hub), [arm32v7.dockerfile](./arm32v7.dockerfile)
 - Dockerfile to build an `arm64v8` image on `x86_64` (Docker Hub), [arm64v8.dockerfile](./arm64v8.dockerfile)
 
+Use the following build rules in Docker Hub for each multi-arch image:
+
+- One build rule per Dockerfile/platform, e.g. `amd64.dockerfile`
+- The _Docker Tag_ indicates the platform, e.g. `amd64`
+- No build rule for the (multi-arch) image tag in the manifest, e.g. `latest`
+
+![Docker Hub Build rules](build-rules.png)
+
+Note that the builds may fail at the beginning until each build rule ran once. This can be because the manifest references images that don't exist yet. Hence, after running all of them, each referenced image exists and the manifest can be pushed succesfully.
+
 ### Push multi-arch manifest automatically (Docker Hub)
 
 Once Docker Hub has published the `amd64` and `arm*` images, Docker Hub executes the `hooks/post_push` script.
@@ -66,7 +76,7 @@ As long as the `docker manifest` commands are experimental, enable the experimen
 
 ```json
 {
-    "experimental": "enabled"
+  "experimental": "enabled"
 }
 ```
 
@@ -108,28 +118,28 @@ docker manifest inspect ckulka/multi-arch-example:latest
 
 ```json
 {
-   "schemaVersion": 2,
-   "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",
-   "manifests": [
-      {
-         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-         "size": 1728,
-         "digest": "sha256:3a859e0c2bdfb60f52b2c805e2cb55260998b3c343d9e2ea04a742d946be1b1e",
-         "platform": {
-            "architecture": "amd64",
-            "os": "linux"
-         }
-      },
-      {
-         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-         "size": 1728,
-         "digest": "sha256:3ef9264d6e5ad96ad7bac675d40edf265ae838ae6ca60865abed159c8c5124c8",
-         "platform": {
-            "architecture": "arm",
-            "os": "linux"
-         }
+  "schemaVersion": 2,
+  "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",
+  "manifests": [
+    {
+      "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+      "size": 1728,
+      "digest": "sha256:3a859e0c2bdfb60f52b2c805e2cb55260998b3c343d9e2ea04a742d946be1b1e",
+      "platform": {
+        "architecture": "amd64",
+        "os": "linux"
       }
-   ]
+    },
+    {
+      "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+      "size": 1728,
+      "digest": "sha256:3ef9264d6e5ad96ad7bac675d40edf265ae838ae6ca60865abed159c8c5124c8",
+      "platform": {
+        "architecture": "arm",
+        "os": "linux"
+      }
+    }
+  ]
 }
 ```
 
